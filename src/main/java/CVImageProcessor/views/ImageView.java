@@ -1,4 +1,6 @@
-package CVImageProcessor;
+package CVImageProcessor.views;
+
+import CVImageProcessor.models.PGM_Image;
 
 import javax.swing.*;
 import java.awt.*;

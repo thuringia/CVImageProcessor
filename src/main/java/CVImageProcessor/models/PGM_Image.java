@@ -1,4 +1,4 @@
-package CVImageProcessor;
+package CVImageProcessor.models;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -90,10 +90,7 @@ public class PGM_Image {
                             count++;*/
 
                             for(int row = 0; row < this.height; row++){
-                                for(int col = 0; col < this.width; col++){
-                                    byte b = stream.readByte();
-                                    this.pixels[row][col] = b;
-                                }
+                                for(int col = 0; col < this.width; col++) im[row][col] = (byte) b;
                             }
 
                         }

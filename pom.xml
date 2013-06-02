@@ -52,7 +52,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>CVImageProcessor.MainWindow</mainClass>
+                            <mainClass>CVImageProcessor.views.MainWindow</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
