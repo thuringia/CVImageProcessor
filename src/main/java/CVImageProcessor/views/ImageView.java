@@ -1,6 +1,7 @@
 package CVImageProcessor.views;
 
 import CVImageProcessor.models.PGM_Image;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,12 +14,28 @@ import java.awt.*;
  *         Time: 7:02 PM
  */
 public class ImageView extends JPanel {
+    Logger logger = Logger.getLogger(ImageView.class);
+
     private PGM_Image img;
 
-    public ImageView (PGM_Image img) {
+    public ImageView(PGM_Image img) {
         this.img = img;
 
-        this.setBounds(0,0,img.width, img.height);
+        this.setSize(img.width, img.height);
+        logger.debug("set image and bounds");
+    }
+
+    private class DrawWorker extends SwingWorker<Void, Void> {
+        private Graphics g;
+
+        public DrawWorker(Graphics g) {
+            this.g = g;
+        }
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            return null;
+        }
     }
 
     /**
@@ -50,14 +67,16 @@ public class ImageView extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        for (int row = 0; row < img.height; row++) {
-            for (int col = 0; col < img.width; col++) {
-                int val = img.data[row][col];
+        logger.debug("starting to paint image");
+        for (int row = 0; row < img.width; row++) {
+            for (int col = 0; col < img.height; col++) {
+                int val = img.int_data[row][col];
                 Color color = new Color(val, val, val);
 
                 g.setColor(color);
-                g.drawLine(row,col,row,col);
+                g.drawLine(row, col, row, col);
             }
         }
+        logger.debug("finished painting");
     }
 }

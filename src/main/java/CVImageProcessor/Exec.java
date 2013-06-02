@@ -1,6 +1,7 @@
 package CVImageProcessor;
 
 import CVImageProcessor.views.MainWindow;
+import org.apache.log4j.BasicConfigurator;
 
 import javax.swing.*;
 
@@ -12,7 +13,11 @@ import javax.swing.*;
  * To change this template use File | Settings | File Templates.
  */
 public class Exec {
+    private static JFrame frame;
+
     public static void main(String[] args) {
+        BasicConfigurator.configure();
+
         // set the native look and feel for the UI
         // if the "native" LNF is Metal, e.g. on KDE, set it to Nimbus (if that is available)
         String LNF = UIManager.getSystemLookAndFeelClassName();
@@ -37,10 +42,19 @@ public class Exec {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        JFrame frame = new JFrame("CVImageProcessor");
+        frame = new JFrame("CVImageProcessor");
         frame.setContentPane(new MainWindow().mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    /**
+     * Get the displaying frame
+     *
+     * @return JFrame
+     */
+    public static JFrame getFrame() {
+        return frame;
     }
 }

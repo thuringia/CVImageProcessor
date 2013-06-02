@@ -1,9 +1,11 @@
 package CVImageProcessor.views;
 
+import CVImageProcessor.Exec;
 import CVImageProcessor.models.PGM_Image;
-import CVImageProcessor.views.ImageView;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
@@ -31,8 +33,12 @@ public class MainWindow {
     private JPanel appPanel;
     private JPanel imagePanel;
     private JPanel menuPanel;
+    private JLabel histogramLabel;
+    private JCheckBox flooredCheckBox;
 
     private PGM_Image image = null;
+    private ImageIcon hist;
+    private ImageIcon flooredHist;
 
     public MainWindow() {
         openButton.addActionListener(new ActionListener() {
@@ -58,27 +64,67 @@ public class MainWindow {
                     image = new PGM_Image(opener.getSelectedFile());
                 }
 
-                if (image != null) showImage();
+                if (image != null) {
+                    showImage();
+                    showMetadata();
+                    getHistograms();
+                }
+            }
+        });
+        quitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
+        dataPanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent changeEvent) {
+                Exec.getFrame().pack();
+            }
+        });
+        flooredCheckBox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent changeEvent) {
+                showHistogram();
             }
         });
     }
 
+    private void getHistograms() {
+        histogramLabel.setText("");
+
+        hist = new ImageIcon(image.getHistogram(false));
+        flooredHist = new ImageIcon(image.getHistogram(true));
+
+        showHistogram();
+    }
+
+    private void showHistogram() {
+        if (flooredCheckBox.getModel().isSelected()) {
+            histogramLabel.setIcon(flooredHist);
+        } else {
+            histogramLabel.setIcon(hist);
+        }
+
+        Exec.getFrame().pack();
+    }
+
     private void showImage() {
-        ImageView imageView = new ImageView(image);
+        imageLabel.setText("");
+        imageLabel.setIcon(new ImageIcon(image.bufferedImage));
 
-        imageLabel.setVisible(false);
+        Exec.getFrame().pack();
+    }
 
-        imagePanel.setSize(image.width, image.height);
-        imagePanel.setLayout(new BoxLayout(imagePanel, BoxLayout.PAGE_AXIS));
-        imagePanel.add(imageView);
+    private void showMetadata() {
+        DefaultTableModel model = new DefaultTableModel(6, 2);
 
-        DefaultTableModel model = new DefaultTableModel(6,2);
-
-        Object[] columnTitles = new Object[] {"Property", "Value"};
+        Object[] columnTitles = new Object[]{"Property", "Value"};
         model.setColumnIdentifiers(columnTitles);
 
-        String[] properties = new String[] {"File Name:", "Magic Number:", "Width:", "Height:", "Depth:", "Size:"};
-        String[] values = new String[] {image.fileName, image.magicNumber, String.valueOf(image.width), String.valueOf(image.height), String.valueOf(image.depth), String.valueOf(image.fileRef.length())};
+        String[] properties = new String[]{"File Name:", "Magic Number:", "Width:", "Height:", "Depth:", "Size:"};
+        String[] values = new String[]{image.fileName, image.magicNumber, String.valueOf(image.width), String.valueOf(image.height), String.valueOf(image.depth), String.valueOf(image.fileRef.length())};
 
         for (int i = 0; i < model.getRowCount(); i++) {
             model.setValueAt(properties[i], i, 0);
@@ -86,5 +132,9 @@ public class MainWindow {
         }
 
         metadataTable.setModel(model);
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }
