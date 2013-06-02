@@ -291,6 +291,9 @@ public class PGM_Image implements Cloneable {
         // stop if the cloning failed
         if (inverted == null) return null;
 
+        // change the file name
+        inverted.fileName = inverted.fileName.substring(0, inverted.fileName.lastIndexOf(".")) + "_INVERTED" + inverted.fileName.substring(inverted.fileName.lastIndexOf("."));
+
         // invert the pixels and adjust the buffered image
         for (int row = 0; row < inverted.width; row++) {
             for (int col = 0; col < inverted.height; col++) {

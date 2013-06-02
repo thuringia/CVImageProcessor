@@ -2,6 +2,9 @@ package CVImageProcessor.views;
 
 import CVImageProcessor.Exec;
 import CVImageProcessor.models.PGM_Image;
+import org.apache.commons.imaging.ImageFormat;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -11,6 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,6 +41,8 @@ public class MainWindow {
     private JCheckBox flooredCheckBox;
     private JButton invertButton;
     private JCheckBox showOriginalCheckBox;
+    private JPanel fileTab;
+    private JPanel imageTab;
 
     private PGM_Image image = null;
     private ImageIcon hist;
@@ -74,6 +80,8 @@ public class MainWindow {
                     showImage();
                     showMetadata();
                     getHistograms();
+
+                    menuTabs.setEnabledAt(1, true);
                 }
             }
         });
@@ -98,11 +106,14 @@ public class MainWindow {
         invertButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                saveButton.setEnabled(true);
+
                 invertedImage = image.invert();
                 invertedHist = new ImageIcon(invertedImage.getHistogram(false));
                 invertedHistFloored = new ImageIcon(invertedImage.getHistogram(true));
 
                 showOriginalCheckBox.getModel().setEnabled(true);
+                showOriginalCheckBox.getModel().setSelected(false);
 
                 showImage();
                 showHistogram();
@@ -113,6 +124,19 @@ public class MainWindow {
             public void stateChanged(ChangeEvent changeEvent) {
                 showHistogram();
                 showImage();
+            }
+        });
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                File invertedFile = new File(invertedImage.fileRef.getParent() + File.separator + invertedImage.fileName);
+                try {
+                    Imaging.writeImage(invertedImage.bufferedImage, invertedFile, ImageFormat.IMAGE_FORMAT_PGM, null);
+                } catch (ImageWriteException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
             }
         });
     }
