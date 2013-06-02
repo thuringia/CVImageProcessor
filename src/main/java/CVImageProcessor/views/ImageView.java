@@ -70,7 +70,7 @@ public class ImageView extends JPanel {
         logger.debug("starting to paint image");
         for (int row = 0; row < img.width; row++) {
             for (int col = 0; col < img.height; col++) {
-                int val = img.int_data[row][col];
+                int val = img.data[row][col];
                 Color color = new Color(val, val, val);
 
                 g.setColor(color);

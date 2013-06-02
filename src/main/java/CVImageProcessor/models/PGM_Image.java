@@ -6,6 +6,7 @@ import org.apache.commons.imaging.Imaging;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -21,7 +22,7 @@ import java.util.Scanner;
  *         Date: 6/1/13
  *         Time: 6:39 PM
  */
-public class PGM_Image {
+public class PGM_Image implements Cloneable {
 
     Logger logger = Logger.getLogger(PGM_Image.class);
 
@@ -34,13 +35,17 @@ public class PGM_Image {
     public String fileName;
     public long fileSize;
 
-    public byte[][] data;
-    public int[][] int_data;
+    public int[][] data;
 
     public File fileRef;
 
     public BufferedImage bufferedImage;
 
+    /**
+     * Instantiate a new PGM_Image object
+     *
+     * @param ref the File to read
+     */
     public PGM_Image(File ref) {
         this.fileRef = ref;
 
@@ -55,13 +60,13 @@ public class PGM_Image {
             this.bufferedImage = Imaging.getBufferedImage(fileRef);
 
             // set array size
-            this.int_data = new int[width][height];
+            this.data = new int[width][height];
 
             // copy the individual pixels
             for (int row = 0; row < width; row++) {
                 for (int col = 0; col < height; col++) {
                     int val = (bufferedImage.getRGB(row, col) & 0xff);
-                    this.int_data[row][col] = val;
+                    this.data[row][col] = val;
                 }
             }
             logger.debug("copied pixel values");
@@ -139,7 +144,7 @@ public class PGM_Image {
         try {
             for (row = 0; row < width; row++) {
                 for (col = 0; col < height; col++) {
-                    pixel = int_data[row][col];
+                    pixel = data[row][col];
                     val = histData.get(pixel);
                     val++;
                     histData.put(pixel, val);
@@ -163,6 +168,8 @@ public class PGM_Image {
         // get the data
         HashMap<Integer, Integer> histData = calculateHistogramData();
 
+        com.googlecode.charts4j.Color black = com.googlecode.charts4j.Color.BLACK;
+
         // create a plot
         Data data;
         if (floored) {
@@ -171,13 +178,13 @@ public class PGM_Image {
             data = Data.newData(scale(new ArrayList<Number>(histData.values()), 0.0, 100.0));
         }
         //
-        BarChartPlot plot = Plots.newBarChartPlot(data, Color.BLACK);
+        BarChartPlot plot = Plots.newBarChartPlot(data, black);
 
         // init the chart
         BarChart chart = GCharts.newBarChart(plot);
 
         // Defining axis info and styles
-        AxisStyle axisStyle = AxisStyle.newAxisStyle(Color.BLACK, 13, AxisTextAlignment.CENTER);
+        AxisStyle axisStyle = AxisStyle.newAxisStyle(black, 13, AxisTextAlignment.CENTER);
         AxisLabels intensity = AxisLabelsFactory.newAxisLabels("Intensity", 50.0);
         intensity.setAxisStyle(axisStyle);
         AxisLabels value = AxisLabelsFactory.newAxisLabels("Value", 50.0);
@@ -194,7 +201,7 @@ public class PGM_Image {
         chart.setBarWidth(1);
         chart.setSpaceWithinGroupsOfBars(0);
         chart.setSpaceBetweenGroupsOfBars(0);
-        chart.setTitle("Histogram", Color.BLACK, 16);
+        chart.setTitle("Histogram", black, 16);
         String url = chart.toURLString();
         logger.debug("chart url:\n" + url);
 
@@ -256,4 +263,49 @@ public class PGM_Image {
         return scaledData;
     }
 
+    /**
+     * Creates a shallow copy of this object
+     *
+     * @return a new {@link PGM_Image}
+     * @throws CloneNotSupportedException
+     */
+    @Override
+    protected PGM_Image clone() throws CloneNotSupportedException {
+        return new PGM_Image(fileRef);    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+    /**
+     * invert the image
+     *
+     * @return a new {@link PGM_Image} containing the inverted image
+     */
+    public PGM_Image invert() {
+        PGM_Image inverted = null;
+
+        try {
+            inverted = this.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        // stop if the cloning failed
+        if (inverted == null) return null;
+
+        // invert the pixels and adjust the buffered image
+        for (int row = 0; row < inverted.width; row++) {
+            for (int col = 0; col < inverted.height; col++) {
+                // invert
+                Color oldColor = new Color(inverted.bufferedImage.getRGB(row, col));
+                Color newColor = new Color(255 - oldColor.getRed(), 255 - oldColor.getGreen(), 255 - oldColor.getBlue());
+
+                // set the new color in the BufferedImage
+                inverted.bufferedImage.setRGB(row, col, newColor.getRGB());
+
+                // adjust the data array
+                inverted.data[row][col] = newColor.getRGB() & 0xFF;
+            }
+        }
+
+        return inverted;
+    }
 }

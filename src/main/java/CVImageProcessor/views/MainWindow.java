@@ -35,10 +35,16 @@ public class MainWindow {
     private JPanel menuPanel;
     private JLabel histogramLabel;
     private JCheckBox flooredCheckBox;
+    private JButton invertButton;
+    private JCheckBox showOriginalCheckBox;
 
     private PGM_Image image = null;
     private ImageIcon hist;
-    private ImageIcon flooredHist;
+    private ImageIcon histFloored;
+
+    private PGM_Image invertedImage = null;
+    private ImageIcon invertedHist;
+    private ImageIcon invertedHistFloored;
 
     public MainWindow() {
         openButton.addActionListener(new ActionListener() {
@@ -89,22 +95,50 @@ public class MainWindow {
                 showHistogram();
             }
         });
+        invertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                invertedImage = image.invert();
+                invertedHist = new ImageIcon(invertedImage.getHistogram(false));
+                invertedHistFloored = new ImageIcon(invertedImage.getHistogram(true));
+
+                showOriginalCheckBox.getModel().setEnabled(true);
+
+                showImage();
+                showHistogram();
+            }
+        });
+        showOriginalCheckBox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent changeEvent) {
+                showHistogram();
+                showImage();
+            }
+        });
     }
 
     private void getHistograms() {
         histogramLabel.setText("");
 
         hist = new ImageIcon(image.getHistogram(false));
-        flooredHist = new ImageIcon(image.getHistogram(true));
+        histFloored = new ImageIcon(image.getHistogram(true));
 
         showHistogram();
     }
 
     private void showHistogram() {
-        if (flooredCheckBox.getModel().isSelected()) {
-            histogramLabel.setIcon(flooredHist);
+        if (showOriginalCheckBox.isSelected()) {
+            if (flooredCheckBox.isSelected()) {
+                histogramLabel.setIcon(histFloored);
+            } else {
+                histogramLabel.setIcon(hist);
+            }
         } else {
-            histogramLabel.setIcon(hist);
+            if (flooredCheckBox.isSelected()) {
+                histogramLabel.setIcon(invertedHistFloored);
+            } else {
+                histogramLabel.setIcon(invertedHist);
+            }
         }
 
         Exec.getFrame().pack();
@@ -112,7 +146,11 @@ public class MainWindow {
 
     private void showImage() {
         imageLabel.setText("");
-        imageLabel.setIcon(new ImageIcon(image.bufferedImage));
+        if (showOriginalCheckBox.isSelected()) {
+            imageLabel.setIcon(new ImageIcon(image.bufferedImage));
+        } else {
+            imageLabel.setIcon(new ImageIcon(invertedImage.bufferedImage));
+        }
 
         Exec.getFrame().pack();
     }
