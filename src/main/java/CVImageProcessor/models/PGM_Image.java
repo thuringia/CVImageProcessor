@@ -1,6 +1,7 @@
 package CVImageProcessor.models;
 
 import com.googlecode.charts4j.*;
+import com.jhlabs.image.GaussianFilter;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 import org.apache.commons.io.FileUtils;
@@ -310,5 +311,40 @@ public class PGM_Image implements Cloneable {
         }
 
         return inverted;
+    }
+
+    /**
+     * blur this image
+     *
+     * @param radius blur kernel size
+     * @return a new {@link PGM_Image} with the blurred image
+     */
+    public PGM_Image blur(float radius) {
+        PGM_Image blurred = null;
+
+        try {
+            blurred = this.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        // stop if the cloning failed
+        if (blurred == null) return null;
+
+        // change the file name
+        blurred.fileName = blurred.fileName.substring(0, blurred.fileName.lastIndexOf(".")) + "_BLURRED" + blurred.fileName.substring(blurred.fileName.lastIndexOf("."));
+
+        // blur
+        GaussianFilter gaussianFilter = new GaussianFilter(radius);
+        gaussianFilter.filter(this.bufferedImage, blurred.bufferedImage);
+
+        // update histogram data
+        for (int row = 0; row < width; row++) {
+            for (int col = 0; col < height; col++) {
+                blurred.data[row][col] = blurred.bufferedImage.getRGB(row, col) & 0xFF;
+            }
+        }
+
+        return blurred;
     }
 }

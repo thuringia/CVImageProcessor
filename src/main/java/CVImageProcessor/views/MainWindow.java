@@ -5,6 +5,7 @@ import CVImageProcessor.models.PGM_Image;
 import org.apache.commons.imaging.ImageFormat;
 import org.apache.commons.imaging.ImageWriteException;
 import org.apache.commons.imaging.Imaging;
+import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -31,7 +32,7 @@ public class MainWindow {
     private JPanel histogramTab;
     private JTabbedPane menuTabs;
     private JButton openButton;
-    private JButton saveButton;
+    private JButton saveInvertedImageButton;
     private JButton quitButton;
     private JTable metadataTable;
     private JPanel appPanel;
@@ -43,6 +44,17 @@ public class MainWindow {
     private JCheckBox showOriginalCheckBox;
     private JPanel fileTab;
     private JPanel imageTab;
+    private JPanel viewPanel;
+    private JRadioButton originalImageRadioButton;
+    private JRadioButton invertedImageRadioButton;
+    private JRadioButton blurredImageRadioButton;
+    private JSlider blurSlider;
+    private JLabel blurKernelLabel;
+    private JButton blurImageButton;
+    private JButton saveBlurredImageButton;
+    private JCheckBox blurImageCheckBox;
+
+    private ActionListener viewButtonsActionListener;
 
     private PGM_Image image = null;
     private ImageIcon hist;
@@ -52,7 +64,19 @@ public class MainWindow {
     private ImageIcon invertedHist;
     private ImageIcon invertedHistFloored;
 
+    private PGM_Image blurredImage = null;
+    private ImageIcon blurredHist;
+    private ImageIcon blurredHistFloored;
+
     public MainWindow() {
+        viewButtonsActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                showImage();
+                showHistogram();
+            }
+        };
+
         openButton.addActionListener(new ActionListener() {
             /**
              * Invoked when an action occurs.
@@ -83,6 +107,10 @@ public class MainWindow {
 
                     menuTabs.setEnabledAt(1, true);
                 }
+
+                originalImageRadioButton.addActionListener(viewButtonsActionListener);
+                invertedImageRadioButton.addActionListener(viewButtonsActionListener);
+                blurredImageRadioButton.addActionListener(viewButtonsActionListener);
             }
         });
         quitButton.addActionListener(new ActionListener() {
@@ -106,31 +134,27 @@ public class MainWindow {
         invertButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                saveButton.setEnabled(true);
+                saveInvertedImageButton.setEnabled(true);
 
                 invertedImage = image.invert();
                 invertedHist = new ImageIcon(invertedImage.getHistogram(false));
                 invertedHistFloored = new ImageIcon(invertedImage.getHistogram(true));
 
-                showOriginalCheckBox.getModel().setEnabled(true);
-                showOriginalCheckBox.getModel().setSelected(false);
+                dataPanel.setEnabledAt(2, true);
+                invertedImageRadioButton.setEnabled(true);
+                invertedImageRadioButton.setSelected(true);
 
                 showImage();
                 showHistogram();
             }
         });
-        showOriginalCheckBox.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent changeEvent) {
-                showHistogram();
-                showImage();
-            }
-        });
-        saveButton.addActionListener(new ActionListener() {
+
+        saveInvertedImageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 File invertedFile = new File(invertedImage.fileRef.getParent() + File.separator + invertedImage.fileName);
                 try {
+                    if (invertedFile.exists()) FileUtils.deleteQuietly(invertedFile);
                     Imaging.writeImage(invertedImage.bufferedImage, invertedFile, ImageFormat.IMAGE_FORMAT_PGM, null);
                 } catch (ImageWriteException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -139,6 +163,46 @@ public class MainWindow {
                 }
             }
         });
+        blurImageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                dataPanel.setEnabledAt(2, true);
+                blurSlider.setEnabled(true);
+                blurredImageRadioButton.setEnabled(true);
+                blurredImageRadioButton.setSelected(true);
+                getBlurredImage(blurSlider.getValue());
+
+            }
+        });
+        blurSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent changeEvent) {
+                getBlurredImage(blurSlider.getValue());
+            }
+        });
+        saveBlurredImageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                File blurredFile = new File(blurredImage.fileRef.getParent() + File.separator + blurredImage.fileName);
+                try {
+                    if (blurredFile.exists()) FileUtils.deleteQuietly(blurredFile);
+                    Imaging.writeImage(blurredImage.bufferedImage, blurredFile, ImageFormat.IMAGE_FORMAT_PGM, null);
+                } catch (ImageWriteException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }
+        });
+    }
+
+    private void getBlurredImage(int radius) {
+        blurredImage = image.blur(Float.valueOf(radius));
+        blurredHist = new ImageIcon(blurredImage.getHistogram(false));
+        blurredHistFloored = new ImageIcon(blurredImage.getHistogram(true));
+
+        showImage();
+        showHistogram();
     }
 
     private void getHistograms() {
@@ -151,17 +215,23 @@ public class MainWindow {
     }
 
     private void showHistogram() {
-        if (showOriginalCheckBox.isSelected()) {
+        if (originalImageRadioButton.isSelected()) {
             if (flooredCheckBox.isSelected()) {
                 histogramLabel.setIcon(histFloored);
             } else {
                 histogramLabel.setIcon(hist);
             }
-        } else {
+        } else if (invertedImageRadioButton.isSelected()) {
             if (flooredCheckBox.isSelected()) {
                 histogramLabel.setIcon(invertedHistFloored);
             } else {
                 histogramLabel.setIcon(invertedHist);
+            }
+        } else {
+            if (flooredCheckBox.isSelected()) {
+                histogramLabel.setIcon(blurredHistFloored);
+            } else {
+                histogramLabel.setIcon(blurredHist);
             }
         }
 
@@ -170,10 +240,12 @@ public class MainWindow {
 
     private void showImage() {
         imageLabel.setText("");
-        if (showOriginalCheckBox.isSelected()) {
+        if (originalImageRadioButton.isSelected()) {
             imageLabel.setIcon(new ImageIcon(image.bufferedImage));
-        } else {
+        } else if (invertedImageRadioButton.isSelected()) {
             imageLabel.setIcon(new ImageIcon(invertedImage.bufferedImage));
+        } else {
+            imageLabel.setIcon(new ImageIcon(blurredImage.bufferedImage));
         }
 
         Exec.getFrame().pack();
@@ -194,9 +266,5 @@ public class MainWindow {
         }
 
         metadataTable.setModel(model);
-    }
-
-    private void createUIComponents() {
-        // TODO: place custom component creation code here
     }
 }
