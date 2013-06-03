@@ -267,4 +267,5 @@ public class MainWindow {
 
         metadataTable.setModel(model);
     }
+
 }
