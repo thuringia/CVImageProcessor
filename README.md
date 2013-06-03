@@ -30,11 +30,14 @@ Installing packages from your package manager is highly recommended!
 ## Build
 1. Install all requirements
 1. Open a terminal
-	1. Clone the git repo with ```git clone https://github.com/thuringia/Car2Square.git```
+	1. Clone the git repo with ```git clone https://github.com/thuringia/CVImageProcessor.git```
+	2. ```cd``` into the cloned directory
 	1. Install the project's dependencies with ```mvn install```
 	1. Create a runnable jar with ```mvn package```
 	1. Create Javadoc with ```mvn javadoc:javadoc```
 	
+Usage instructions for Windows can be different (expecially for Maven) please consult the provided links for further assistance.
+
 ## Run CVImageProcessor
 1. Navigate to ```PROJECT_CLONE_DIR/target```
 1. Launch CVImageProcessor by double-clicking ```CVImageProcessor-1.0-SNAPSHOT.jar```
