@@ -1,7 +1,14 @@
 #CVImageProcessor
-================
 
 Source code for the DHBW Computer Vision lecture
+
+## LICENCE
+```java
+package CVImageProcessor
+```
+BSD licence see LICENCE
+
+For everything else please see the provided links or the source code.
 
 ## Features
 
@@ -13,9 +20,9 @@ Source code for the DHBW Computer Vision lecture
 
 ## Requirements
 
-* git[http://git-scm.com/downloads]
-* maven2[http://maven.apache.org/download.cgi]
-* JDK 1.6[http://www.oracle.com/technetwork/java/javase/downloads/index.html]
+* [git](http://git-scm.com/downloads)
+* [maven2](http://maven.apache.org/download.cgi)
+* [JDK 1.6 or newer](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * internet connection during execution to display histograms
 
 Installing packages from your package manager is highly recommended!
@@ -23,15 +30,15 @@ Installing packages from your package manager is highly recommended!
 ## Build
 1. Install all requirements
 1. Open a terminal
-	1. Clone the git repo with git clone https://github.com/thuringia/Car2Square.git
-	1. Install the project's dependencies with mvn install
-	1. Create a runnable jar with mvn package
-	1. Create Javadoc with mvn javadoc:javadoc
+	1. Clone the git repo with ```git clone https://github.com/thuringia/Car2Square.git```
+	1. Install the project's dependencies with ```mvn install```
+	1. Create a runnable jar with ```mvn package```
+	1. Create Javadoc with ```mvn javadoc:javadoc```
 	
 ## Run CVImageProcessor
-1. Navigate to PROJECT_CLONE_DIR/target
-1. Launch CVImageProcessor by double-clicking CVImageProcessor-1.0-SNAPSHOT.jar
-	1. Alternatively issue java -jar CVImageProcessor-1.0-SNAPSHOT.jar from the terminal
+1. Navigate to ```PROJECT_CLONE_DIR/target```
+1. Launch CVImageProcessor by double-clicking ```CVImageProcessor-1.0-SNAPSHOT.jar```
+	1. Alternatively issue ```java -jar CVImageProcessor-1.0-SNAPSHOT.jar from the terminal```
 	
 ## Use CVImageProcessor
 * Before doing anything you need to open an image.
@@ -45,8 +52,8 @@ Installing packages from your package manager is highly recommended!
 * Save an inverted or blurred image by clicking the appropriate buttons in the 'File' tab at the bottom
 
 #Libraries
-* Apache Commons IO[http://commons.apache.org/proper/commons-io/]
-* Apache Imaging[http://commons.apache.org/proper/commons-imaging/index.html]
-* Apache log4j[http://logging.apache.org/log4j/1.2/]
-* Chart4j[https://code.google.com/p/charts4j/]
-* Jerry Huxtable's 'Blurring for Beginners'[http://www.jhlabs.com/ip/blurring.html]
+* [Apache Commons IO](http://commons.apache.org/proper/commons-io/)
+* [Apache Imaging](http://commons.apache.org/proper/commons-imaging/index.html)
+* [Apache log4j](http://logging.apache.org/log4j/1.2/)
+* [Chart4j](https://code.google.com/p/charts4j/)
+* [Jerry Huxtable's 'Blurring for Beginners'](http://www.jhlabs.com/ip/blurring.html)
