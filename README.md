@@ -23,6 +23,7 @@ For everything else please see the provided links or the source code.
 * [git](http://git-scm.com/downloads)
 * [maven2](http://maven.apache.org/download.cgi)
 * [JDK 1.6 or newer](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* [OpenCV](http://opencv.org/downloads.html)
 * internet connection during execution to display histograms
 
 Installing packages from your package manager is highly recommended!
@@ -51,6 +52,7 @@ Usage instructions for Windows can be different (expecially for Maven) please co
 * To manipulate go to the 'Image' tab at the bottom
 	* Invert your image by clicking 'Invert'
 	* Blur the image by clicking 'Blur' with adjustable kernel sizes using the slider
+	* Detect lines in the image by clicking the "Detect Lines" button
 	* Switch between the original, inverted and blurred image by using the 'View' tab to the right
 * Save an inverted or blurred image by clicking the appropriate buttons in the 'File' tab at the bottom
 

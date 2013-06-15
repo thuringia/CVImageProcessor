@@ -16,8 +16,6 @@ public class Exec {
     private static JFrame frame;
 
     public static void main(String[] args) {
-        BasicConfigurator.configure();
-
         // set the native look and feel for the UI
         // if the "native" LNF is Metal, e.g. on KDE, set it to Nimbus (if that is available)
         String LNF = UIManager.getSystemLookAndFeelClassName();

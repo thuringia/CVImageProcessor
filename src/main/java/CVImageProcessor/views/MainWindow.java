@@ -52,6 +52,9 @@ public class MainWindow {
     private JLabel blurKernelLabel;
     private JButton blurImageButton;
     private JButton saveBlurredImageButton;
+    private JButton detectLinesButton;
+    private JRadioButton detectedLinesRadioButton;
+    private JSlider thresholdSlider;
     private JCheckBox blurImageCheckBox;
 
     private ActionListener viewButtonsActionListener;
@@ -67,6 +70,12 @@ public class MainWindow {
     private PGM_Image blurredImage = null;
     private ImageIcon blurredHist;
     private ImageIcon blurredHistFloored;
+
+    private PGM_Image detectedLinesImage = null;
+    private ImageIcon detectedLinesHist;
+    private ImageIcon detectedLinesHistFloored;
+
+    private static String histogramError = "No histogram because of missing internet connection.";
 
     public MainWindow() {
         viewButtonsActionListener = new ActionListener() {
@@ -106,31 +115,37 @@ public class MainWindow {
                     getHistograms();
 
                     menuTabs.setEnabledAt(1, true);
+                    dataPanel.setEnabledAt(1, true);
                 }
 
                 originalImageRadioButton.addActionListener(viewButtonsActionListener);
                 invertedImageRadioButton.addActionListener(viewButtonsActionListener);
                 blurredImageRadioButton.addActionListener(viewButtonsActionListener);
+                detectedLinesRadioButton.addActionListener(viewButtonsActionListener);
             }
         });
+
         quitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 System.exit(0);
             }
         });
+
         dataPanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent changeEvent) {
                 Exec.getFrame().pack();
             }
         });
+
         flooredCheckBox.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent changeEvent) {
                 showHistogram();
             }
         });
+
         invertButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -163,9 +178,11 @@ public class MainWindow {
                 }
             }
         });
+
         blurImageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                dataPanel.setEnabledAt(1, true);
                 dataPanel.setEnabledAt(2, true);
                 blurSlider.setEnabled(true);
                 blurredImageRadioButton.setEnabled(true);
@@ -174,12 +191,14 @@ public class MainWindow {
 
             }
         });
+
         blurSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent changeEvent) {
                 getBlurredImage(blurSlider.getValue());
             }
         });
+
         saveBlurredImageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -194,12 +213,47 @@ public class MainWindow {
                 }
             }
         });
+
+        detectLinesButton.addActionListener(new ActionListener() {
+            /**
+             * Invoked when an action occurs.
+             */
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dataPanel.setEnabledAt(1, true);
+                dataPanel.setEnabledAt(2, true);
+                detectedLinesRadioButton.setEnabled(true);
+                detectedLinesRadioButton.setSelected(true);
+
+                getDetectedLines(thresholdSlider.getValue());
+            }
+        });
+
+        thresholdSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                getDetectedLines(thresholdSlider.getValue());
+            }
+        });
+    }
+
+    private void getDetectedLines(int threshold) {
+        detectedLinesImage = image.detectLines(threshold);
+        detectedLinesHist = new ImageIcon(detectedLinesImage.getHistogram(false));
+        detectedLinesHistFloored = new ImageIcon(detectedLinesImage.getHistogram(true));
+
+        if (detectedLinesHist == null || detectedLinesHistFloored == null) histogramLabel.setText(histogramError);
+
+        showImage();
+        showHistogram();
     }
 
     private void getBlurredImage(int radius) {
         blurredImage = image.blur(Float.valueOf(radius));
         blurredHist = new ImageIcon(blurredImage.getHistogram(false));
         blurredHistFloored = new ImageIcon(blurredImage.getHistogram(true));
+
+        if (blurredHist == null || blurredHistFloored == null) histogramLabel.setText(histogramError);
 
         showImage();
         showHistogram();
@@ -211,28 +265,41 @@ public class MainWindow {
         hist = new ImageIcon(image.getHistogram(false));
         histFloored = new ImageIcon(image.getHistogram(true));
 
+        if (hist == null || histFloored == null) histogramLabel.setText(histogramError);
+
         showHistogram();
     }
 
     private void showHistogram() {
-        if (originalImageRadioButton.isSelected()) {
-            if (flooredCheckBox.isSelected()) {
-                histogramLabel.setIcon(histFloored);
+        try {
+            if (originalImageRadioButton.isSelected()) {
+                if (flooredCheckBox.isSelected()) {
+                    histogramLabel.setIcon(histFloored);
+                } else {
+                    histogramLabel.setIcon(hist);
+                }
+            } else if (invertedImageRadioButton.isSelected()) {
+                if (flooredCheckBox.isSelected()) {
+                    histogramLabel.setIcon(invertedHistFloored);
+                } else {
+                    histogramLabel.setIcon(invertedHist);
+                }
+            } else if (blurredImageRadioButton.isSelected()) {
+                if (flooredCheckBox.isSelected()) {
+                    histogramLabel.setIcon(blurredHistFloored);
+                } else {
+                    histogramLabel.setIcon(blurredHist);
+                }
             } else {
-                histogramLabel.setIcon(hist);
+                if (flooredCheckBox.isSelected()) {
+                    histogramLabel.setIcon(detectedLinesHistFloored);
+                } else {
+                    histogramLabel.setIcon(detectedLinesHist);
+                }
             }
-        } else if (invertedImageRadioButton.isSelected()) {
-            if (flooredCheckBox.isSelected()) {
-                histogramLabel.setIcon(invertedHistFloored);
-            } else {
-                histogramLabel.setIcon(invertedHist);
-            }
-        } else {
-            if (flooredCheckBox.isSelected()) {
-                histogramLabel.setIcon(blurredHistFloored);
-            } else {
-                histogramLabel.setIcon(blurredHist);
-            }
+        } catch (Exception e) {
+            // catch null pointer from URL
+            // no reaction necessary
         }
 
         Exec.getFrame().pack();
@@ -244,8 +311,10 @@ public class MainWindow {
             imageLabel.setIcon(new ImageIcon(image.bufferedImage));
         } else if (invertedImageRadioButton.isSelected()) {
             imageLabel.setIcon(new ImageIcon(invertedImage.bufferedImage));
-        } else {
+        } else if (blurredImageRadioButton.isSelected()) {
             imageLabel.setIcon(new ImageIcon(blurredImage.bufferedImage));
+        } else {
+            imageLabel.setIcon(new ImageIcon(detectedLinesImage.bufferedImage));
         }
 
         Exec.getFrame().pack();

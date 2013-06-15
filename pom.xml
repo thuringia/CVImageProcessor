@@ -18,6 +18,8 @@
     </developers>
 
     <properties>
+        <javacpp.version>0.5</javacpp.version>
+        <javacv.version>0.5</javacv.version>
         <platform.name>${os.name}-${os.arch}</platform.name>
     </properties>
 
@@ -90,12 +92,17 @@
         <dependency>
             <groupId>com.googlecode.javacpp</groupId>
             <artifactId>javacpp</artifactId>
-            <version>0.5</version>
+            <version>${javacpp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.javacv</groupId>
             <artifactId>javacv</artifactId>
-            <version>0.5</version>
+            <version>${javacv.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.javacv</groupId>
+            <artifactId>javacv</artifactId>
+            <version>${javacv.version}</version>
             <classifier>${platform.name}</classifier>
         </dependency>
     </dependencies>
@@ -105,6 +112,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>

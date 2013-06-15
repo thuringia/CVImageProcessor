@@ -1,6 +1,10 @@
 package CVImageProcessor.models;
 
 import com.googlecode.charts4j.*;
+import com.googlecode.javacpp.Loader;
+import com.googlecode.javacv.cpp.opencv_core;
+import com.googlecode.javacv.cpp.opencv_imgproc;
+import com.googlecode.javacv.cpp.opencv_objdetect;
 import com.jhlabs.image.GaussianFilter;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
@@ -11,10 +15,16 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+
+import static com.googlecode.javacv.cpp.opencv_core.cvDrawContours;
+import static com.googlecode.javacv.cpp.opencv_highgui.CV_LOAD_IMAGE_GRAYSCALE;
+import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImage;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -209,9 +219,9 @@ public class PGM_Image implements Cloneable {
         try {
             return Imaging.getBufferedImage(new URL(url).openStream());
         } catch (ImageReadException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error(e.getMessage(), e);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error(e.getMessage(), e);
         }
 
         // if we get here something went very wrong
@@ -339,12 +349,89 @@ public class PGM_Image implements Cloneable {
         gaussianFilter.filter(this.bufferedImage, blurred.bufferedImage);
 
         // update histogram data
+        updateHistogramData(blurred);
+
+        return blurred;
+    }
+
+    /**
+     * Cycle through all the pixels to genereate the histogramm data
+     * @param blurred
+     */
+    private void updateHistogramData(PGM_Image blurred) {
         for (int row = 0; row < width; row++) {
             for (int col = 0; col < height; col++) {
                 blurred.data[row][col] = blurred.bufferedImage.getRGB(row, col) & 0xFF;
             }
         }
+    }
 
-        return blurred;
+    /**
+     * detect lines in this image
+     * @return new {@link PGM_Image} with detected lines drawn in
+     */
+    public PGM_Image detectLines(int threshold) {
+        logger.debug("pre-loading C libraries");
+        Loader.load(opencv_objdetect.class);
+
+        logger.debug("starting line detection");
+
+        PGM_Image detectedLines = null;
+
+        try {
+            detectedLines = this.clone();
+            logger.debug("cloned image");
+        } catch (CloneNotSupportedException e) {
+            logger.error("Clone not supported\n", e);
+
+            return null;
+        }
+
+        // change the file name
+        detectedLines.fileName = detectedLines.fileName.substring(0, detectedLines.fileName.lastIndexOf(".")) + "_DETECTED_LINES" + ".pgm";
+        logger.debug("file name changed from: " + this.fileName + "\nto: " + detectedLines.fileName);
+
+        // create image for opencv
+        //opencv_core.IplImage image = opencv_core.IplImage.createFrom(detectedLines.bufferedImage);
+        opencv_core.IplImage image = cvLoadImage(this.fileRef.getAbsolutePath(), CV_LOAD_IMAGE_GRAYSCALE);
+        logger.debug("image opened for opencv");
+
+        // Objects allocated with a create*() or clone() factory method are automatically released
+        // by the garbage collector, but may still be explicitly released by calling release().
+        // You shall NOT call cvReleaseImage(), cvReleaseMemStorage(), etc. on objects allocated this way.
+        opencv_core.CvMemStorage storage = opencv_core.CvMemStorage.create();
+        logger.debug("created opencv memory storage");
+
+        if (image != null) {
+            // threshold the image
+            cvThreshold(image, image, threshold, 255, opencv_imgproc.CV_THRESH_BINARY);
+            logger.debug("image thresholded");
+
+            // To check if an output argument is null we may call either isNull() or equals(null).
+            opencv_core.CvSeq contour = new opencv_core.CvSeq(null);
+
+            logger.debug("detecting lines");
+            opencv_imgproc.cvFindContours(image, storage, contour, Loader.sizeof(opencv_core.CvContour.class),
+                   opencv_imgproc.CV_RETR_LIST, opencv_imgproc.CV_CHAIN_APPROX_SIMPLE);
+
+            logger.debug("drawing lines");
+            while (contour != null && !contour.isNull()) {
+                if (contour.elem_size() > 0) {
+                    opencv_core.CvSeq points = opencv_imgproc.cvApproxPoly(contour, Loader.sizeof(opencv_core.CvContour.class),
+                            storage, opencv_imgproc.CV_POLY_APPROX_DP, cvContourPerimeter(contour) * 0.02, 0);
+                    cvDrawContours(image, points, opencv_core.CvScalar.BLUE, opencv_core.CvScalar.BLUE, -1, 1, opencv_core.CV_AA);
+                }
+                contour = contour.h_next();
+            }
+        }
+
+        // update BufferedImage
+        detectedLines.bufferedImage = image.getBufferedImage();
+
+        // update histogram data
+        updateHistogramData(detectedLines);
+
+        logger.debug("updated BufferedImage and histogram data -> exiting method");
+        return detectedLines;
     }
 }
