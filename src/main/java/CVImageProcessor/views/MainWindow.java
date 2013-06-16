@@ -3,9 +3,7 @@ package CVImageProcessor.views;
 import CVImageProcessor.Exec;
 import CVImageProcessor.models.PGM_Image;
 import org.apache.commons.imaging.ImageFormat;
-import org.apache.commons.imaging.ImageWriteException;
 import org.apache.commons.imaging.Imaging;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
@@ -15,9 +13,14 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import static com.googlecode.javacv.cpp.opencv_imgproc.CV_HOUGH_PROBABILISTIC;
+import static com.googlecode.javacv.cpp.opencv_imgproc.CV_HOUGH_STANDARD;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,7 +37,6 @@ public class MainWindow {
     private JPanel histogramTab;
     private JTabbedPane menuTabs;
     private JButton openButton;
-    private JButton saveInvertedImageButton;
     private JButton quitButton;
     private JTable metadataTable;
     private JPanel appPanel;
@@ -43,7 +45,6 @@ public class MainWindow {
     private JLabel histogramLabel;
     private JCheckBox flooredCheckBox;
     private JButton invertButton;
-    private JCheckBox showOriginalCheckBox;
     private JPanel fileTab;
     private JPanel imageTab;
     private JPanel viewPanel;
@@ -57,36 +58,64 @@ public class MainWindow {
     private JButton detectLinesButton;
     private JRadioButton detectedLinesRadioButton;
     private JSlider thresholdSlider;
-    private JCheckBox blurImageCheckBox;
+    private JRadioButton standardHoughRadioButton;
+    private JRadioButton probalisticHoughRadioButton;
+    private JButton saveImageButton;
 
-    private ActionListener viewButtonsActionListener;
+    private final ActionListener viewButtonsActionListener;
+    private final ActionListener houghMethodActionListener;
+    private final PropertyChangeListener propertyChangeListener;
 
-    private PGM_Image image = null;
+    //private PGM_Image image = null;
     private ImageIcon hist;
     private ImageIcon histFloored;
 
-    private PGM_Image invertedImage = null;
+    //private PGM_Image invertedImage = null;
     private ImageIcon invertedHist;
     private ImageIcon invertedHistFloored;
 
-    private PGM_Image blurredImage = null;
+    //private PGM_Image blurredImage = null;
     private ImageIcon blurredHist;
     private ImageIcon blurredHistFloored;
 
-    private PGM_Image detectedLinesImage = null;
+    //private PGM_Image detectedLinesImage = null;
     private ImageIcon detectedLinesHist;
     private ImageIcon detectedLinesHistFloored;
 
-    private static String histogramError = "No histogram because of missing internet connection.";
+    private static final String histogramError = "No histogram because of missing internet connection.";
 
-    private static Logger logger = Logger.getLogger(MainWindow.class);
+    private static final Logger logger = Logger.getLogger(MainWindow.class);
+
+    private HashMap<IMAGES, PGM_Image> images;
+
+    /**
+     * enum used to select and save the images
+     */
+    private enum IMAGES {STANDARD, BLURRED, INVERTED, LINES};
 
     public MainWindow() {
+        images = new HashMap<IMAGES, PGM_Image>();
+
+        propertyChangeListener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                showImage();
+                showHistogram();
+            }
+        };
+
         viewButtonsActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 showImage();
                 showHistogram();
+            }
+        };
+
+        houghMethodActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                getDetectedLines();
             }
         };
 
@@ -100,20 +129,20 @@ public class MainWindow {
                 opener.setFileFilter(new FileFilter() {
                     @Override
                     public boolean accept(File f) {
-                        return ((f.isDirectory() || f.getName().endsWith("pgm") ? true : false));  //To change body of implemented methods use File | Settings | File Templates.
+                        return ((f.isDirectory() || f.getName().endsWith("pgm")));
                     }
 
                     @Override
                     public String getDescription() {
-                        return "Directories and PGMs";  //To change body of implemented methods use File | Settings | File Templates.
+                        return "Directories and PGMs";
                     }
                 });
 
                 if (opener.showDialog(mainPanel, "Open") == JFileChooser.APPROVE_OPTION) {
-                    image = new PGM_Image(opener.getSelectedFile());
+                    images.put(IMAGES.STANDARD, new PGM_Image(opener.getSelectedFile()));
                 }
 
-                if (image != null) {
+                if (images.get(IMAGES.STANDARD) != null) {
                     showImage();
                     showMetadata();
                     getHistograms();
@@ -153,12 +182,15 @@ public class MainWindow {
         invertButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                saveInvertedImageButton.setEnabled(true);
+                saveImageButton.setEnabled(true);
 
-                invertedImage = image.invert();
+                PGM_Image invertedImage = images.get(IMAGES.STANDARD).invert();
+                images.put(IMAGES.INVERTED, invertedImage);
+                try {
                 invertedHist = new ImageIcon(invertedImage.getHistogram(false));
                 invertedHistFloored = new ImageIcon(invertedImage.getHistogram(true));
-
+                }
+                catch (Exception e) {}
                 dataPanel.setEnabledAt(2, true);
                 invertedImageRadioButton.setEnabled(true);
                 invertedImageRadioButton.setSelected(true);
@@ -168,24 +200,10 @@ public class MainWindow {
             }
         });
 
-        saveInvertedImageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                File invertedFile = new File(invertedImage.fileRef.getParent() + File.separator + invertedImage.fileName);
-                try {
-                    if (invertedFile.exists()) FileUtils.deleteQuietly(invertedFile);
-                    Imaging.writeImage(invertedImage.bufferedImage, invertedFile, ImageFormat.IMAGE_FORMAT_PGM, null);
-                } catch (ImageWriteException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        });
-
         blurImageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                saveImageButton.setEnabled(true);
                 dataPanel.setEnabledAt(1, true);
                 dataPanel.setEnabledAt(2, true);
                 blurSlider.setEnabled(true);
@@ -203,77 +221,126 @@ public class MainWindow {
             }
         });
 
-        saveBlurredImageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                File blurredFile = new File(blurredImage.fileRef.getParent() + File.separator + blurredImage.fileName);
-                try {
-                    if (blurredFile.exists()) FileUtils.deleteQuietly(blurredFile);
-                    Imaging.writeImage(blurredImage.bufferedImage, blurredFile, ImageFormat.IMAGE_FORMAT_PGM, null);
-                } catch (ImageWriteException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        });
-
         detectLinesButton.addActionListener(new ActionListener() {
             /**
              * Invoked when an action occurs.
              */
             @Override
             public void actionPerformed(ActionEvent e) {
+                saveImageButton.setEnabled(true);
                 dataPanel.setEnabledAt(1, true);
                 dataPanel.setEnabledAt(2, true);
                 detectedLinesRadioButton.setEnabled(true);
                 detectedLinesRadioButton.setSelected(true);
                 thresholdSlider.setEnabled(true);
+                standardHoughRadioButton.setEnabled(true);
+                probalisticHoughRadioButton.setEnabled(true);
 
-                getDetectedLines(thresholdSlider.getValue());
+                standardHoughRadioButton.addActionListener(houghMethodActionListener);
+                probalisticHoughRadioButton.addActionListener(houghMethodActionListener);
+
+                getDetectedLines();
             }
         });
 
         thresholdSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                getDetectedLines(thresholdSlider.getValue());
+                getDetectedLines();
+            }
+        });
+        saveImageButton.addActionListener(new ActionListener() {
+            /**
+             * Invoked when an action occurs.
+             */
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ArrayList<Object> options = new ArrayList<Object>();
+
+                // check which images are available
+                for (PGM_Image img : images.values()) {
+                    options.add(img.fileName);
+                }
+
+
+                int file_to_save = JOptionPane.showOptionDialog(
+                        Exec.getFrame(),
+                        "Please choose the image to save.",
+                        "Choose image",
+                        JOptionPane.OK_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options.toArray(),
+                        options.get(0));
+
+                JFileChooser saver = new JFileChooser(images.get(IMAGES.STANDARD).fileRef.getParentFile());
+                saver.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+                if (saver.showSaveDialog(Exec.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    // save to this folder
+                    File dest = saver.getSelectedFile();
+
+                    // get the image to save
+                    for (PGM_Image img : images.values()) {
+                        if (options.get(file_to_save).equals(img.fileName)) {
+                            dest = new File(dest.getAbsolutePath() + File.separator + img.fileName);
+                            try {
+                                Imaging.writeImage(img.bufferedImage, dest, ImageFormat.IMAGE_FORMAT_PGM, null);
+                            } catch (Exception ex) {
+                                logger.error("error saving " + img.fileName + "\n", ex);
+                            }
+                        }
+                    }
+                }
             }
         });
     }
 
-    private void getDetectedLines(final int threshold) {
+    /**
+     * helper method used to detect lines in an image
+     * using a {@link SwingWorker} for concurrency
+     */
+    private void getDetectedLines() {
         SwingWorker<PGM_Image, Void> worker = new SwingWorker<PGM_Image, Void>() {
             @Override
             protected PGM_Image doInBackground() throws Exception {
-                return image.detectLines(threshold);  //To change body of implemented methods use File | Settings | File Templates.
+                int hough_method = standardHoughRadioButton.isSelected() ? CV_HOUGH_STANDARD : CV_HOUGH_PROBABILISTIC;
+                int hough_treshold = thresholdSlider.getValue();
+                return images.get(IMAGES.STANDARD).detectLines(hough_treshold, hough_method);  //To change body of implemented methods use File | Settings | File Templates.
             }
 
             @Override
             protected void done() {
                 try {
-                    detectedLinesImage = get();
+                    PGM_Image detectedLinesImage = get();
+                    images.put(IMAGES.LINES, detectedLinesImage);
                     detectedLinesHist = new ImageIcon(detectedLinesImage.getHistogram(false));
                     detectedLinesHistFloored = new ImageIcon(detectedLinesImage.getHistogram(true));
 
-                    if (detectedLinesHist == null || detectedLinesHistFloored == null) histogramLabel.setText(histogramError);
+                    if (detectedLinesHist == null) histogramLabel.setText(histogramError);
 
                     showImage();
                     showHistogram();
+                    firePropertyChange("done", false, true);
                 } catch (Exception e) {
                     logger.error("concurrency issue @ line detection worker:\n", e);
                 }
             }
         };
 
+        worker.addPropertyChangeListener(propertyChangeListener);
         worker.execute();
     }
 
+    /**
+     * helper method to blur a image using a {@link SwingWorker} for concurrency
+     * @param radius the blur radius (kernel)
+     */
     private void getBlurredImage(final int radius) {
         SwingWorker<PGM_Image, Void> worker = new SwingWorker<PGM_Image, Void>() {
             @Override
             protected PGM_Image doInBackground() throws Exception {
-                return image.blur(radius);
+                return images.get(IMAGES.STANDARD).blur(radius);
             }
 
             /**
@@ -291,34 +358,47 @@ public class MainWindow {
             @Override
             protected void done() {
                 try {
-                    blurredImage = get();
+                    PGM_Image blurredImage = get();
+                    images.put(IMAGES.BLURRED, blurredImage);
                     blurredHist = new ImageIcon(blurredImage.getHistogram(false));
                     blurredHistFloored = new ImageIcon(blurredImage.getHistogram(true));
 
-                    if (blurredHist == null || blurredHistFloored == null) histogramLabel.setText(histogramError);
+                    if (blurredHist == null) histogramLabel.setText(histogramError);
 
                     showImage();
                     showHistogram();
+                    firePropertyChange("done", false, true);
                 } catch (Exception e) {
                     logger.error("concurrency issue @ blur worker:\n", e);
                 }
             }
         };
 
+        worker.addPropertyChangeListener(propertyChangeListener);
         worker.execute();
     }
 
+    /**
+     * helper method that creates the histograms
+     */
     private void getHistograms() {
         histogramLabel.setText("");
 
-        hist = new ImageIcon(image.getHistogram(false));
-        histFloored = new ImageIcon(image.getHistogram(true));
+        try {
+        hist = new ImageIcon(images.get(IMAGES.STANDARD).getHistogram(false));
+        histFloored = new ImageIcon(images.get(IMAGES.STANDARD).getHistogram(true));
+        }
+        catch (Exception e) {
 
+        }
         if (hist == null || histFloored == null) histogramLabel.setText(histogramError);
 
         showHistogram();
     }
 
+    /**
+     * helper method to determine which histogram to show
+     */
     private void showHistogram() {
         try {
             if (originalImageRadioButton.isSelected()) {
@@ -354,22 +434,29 @@ public class MainWindow {
         Exec.getFrame().pack();
     }
 
+    /**
+     * helper method that determinbes which image to show
+     */
     private void showImage() {
         imageLabel.setText("");
         if (originalImageRadioButton.isSelected()) {
-            imageLabel.setIcon(new ImageIcon(image.bufferedImage));
+            imageLabel.setIcon(new ImageIcon(images.get(IMAGES.STANDARD).bufferedImage));
         } else if (invertedImageRadioButton.isSelected()) {
-            imageLabel.setIcon(new ImageIcon(invertedImage.bufferedImage));
+            imageLabel.setIcon(new ImageIcon(images.get(IMAGES.INVERTED).bufferedImage));
         } else if (blurredImageRadioButton.isSelected()) {
-            imageLabel.setIcon(new ImageIcon(blurredImage.bufferedImage));
+            imageLabel.setIcon(new ImageIcon(images.get(IMAGES.BLURRED).bufferedImage));
         } else {
-            imageLabel.setIcon(new ImageIcon(detectedLinesImage.bufferedImage));
+            imageLabel.setIcon(new ImageIcon(images.get(IMAGES.LINES).bufferedImage));
         }
 
         Exec.getFrame().pack();
     }
 
+    /**
+     * helper method loading the image's metadata into the GUI's {@link JTable}
+     */
     private void showMetadata() {
+        PGM_Image image = images.get(IMAGES.STANDARD);
         DefaultTableModel model = new DefaultTableModel(6, 2);
 
         Object[] columnTitles = new Object[]{"Property", "Value"};

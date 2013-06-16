@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="5" left="5" bottom="5" right="5"/>
     <constraints>
-      <xy x="20" y="20" width="453" height="330"/>
+      <xy x="20" y="20" width="483" height="363"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -156,7 +156,7 @@
             </properties>
             <border type="none"/>
             <children>
-              <grid id="3434" binding="fileTab" layout-manager="GridLayoutManager" row-count="1" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="3434" binding="fileTab" layout-manager="GridLayoutManager" row-count="1" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <tabbedpane title="File"/>
@@ -172,18 +172,9 @@
                       <text value="&amp;Open"/>
                     </properties>
                   </component>
-                  <component id="1fd08" class="javax.swing.JButton" binding="saveInvertedImageButton">
-                    <constraints>
-                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                    <properties>
-                      <enabled value="false"/>
-                      <text value="&amp;Save Inverted Image"/>
-                    </properties>
-                  </component>
                   <component id="feca8" class="javax.swing.JButton" binding="quitButton" default-binding="true">
                     <constraints>
-                      <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="&amp;Quit"/>
@@ -191,21 +182,21 @@
                   </component>
                   <hspacer id="b3bf9">
                     <constraints>
-                      <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                   </hspacer>
-                  <component id="422ee" class="javax.swing.JButton" binding="saveBlurredImageButton" default-binding="true">
+                  <component id="73187" class="javax.swing.JButton" binding="saveImageButton" default-binding="true">
                     <constraints>
-                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <enabled value="false"/>
-                      <text value="Save Blurred Image"/>
+                      <text value="Save Image"/>
                     </properties>
                   </component>
                 </children>
               </grid>
-              <grid id="c987e" binding="imageTab" layout-manager="GridLayoutManager" row-count="3" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="c987e" binding="imageTab" layout-manager="GridLayoutManager" row-count="4" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <tabbedpane title="Image" enabled="false"/>
@@ -217,7 +208,7 @@
                 <children>
                   <component id="3a018" class="javax.swing.JSlider" binding="blurSlider">
                     <constraints>
-                      <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <enabled value="false"/>
@@ -238,7 +229,7 @@
                   </component>
                   <component id="ecb04" class="javax.swing.JLabel" binding="blurKernelLabel">
                     <constraints>
-                      <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="Blur Radius"/>
@@ -262,7 +253,7 @@
                   </component>
                   <component id="6de6b" class="javax.swing.JSlider" binding="thresholdSlider">
                     <constraints>
-                      <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="2" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <enabled value="false"/>
@@ -292,10 +283,37 @@
                   </component>
                   <component id="38788" class="javax.swing.JLabel">
                     <constraints>
-                      <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="Threshold"/>
+                    </properties>
+                  </component>
+                  <component id="84c49" class="javax.swing.JRadioButton" binding="standardHoughRadioButton" default-binding="true">
+                    <constraints>
+                      <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <selected value="true"/>
+                      <text value="Standard Hough"/>
+                    </properties>
+                  </component>
+                  <component id="6e1e" class="javax.swing.JRadioButton" binding="probalisticHoughRadioButton" default-binding="true">
+                    <constraints>
+                      <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <text value="Probalistic Hough"/>
+                    </properties>
+                  </component>
+                  <component id="4fb06" class="javax.swing.JLabel">
+                    <constraints>
+                      <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Hough Variant"/>
                     </properties>
                   </component>
                 </children>
@@ -312,6 +330,10 @@
       <member id="d74f0"/>
       <member id="8dee2"/>
       <member id="108a6"/>
+    </group>
+    <group name="houghSelectButtonGroup">
+      <member id="84c49"/>
+      <member id="6e1e"/>
     </group>
   </buttonGroups>
 </form>

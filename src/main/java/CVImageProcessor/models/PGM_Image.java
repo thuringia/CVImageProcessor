@@ -372,7 +372,7 @@ public class PGM_Image implements Cloneable {
      * using the JavaCV wrapper {@link https://code.google.com/p/javacv/}
      * @return new {@link PGM_Image} with detected lines drawn in
      */
-    public PGM_Image detectLines(int threshold) {
+    public PGM_Image detectLines(int hough_threshold, int method /*, boolean use_canny, int cv_threshold*/) {
         logger.debug("pre-loading C libraries");
         Loader.load(opencv_objdetect.class);
 
@@ -394,14 +394,13 @@ public class PGM_Image implements Cloneable {
         logger.debug("file name changed from: " + this.fileName + "\nto: " + detectedLines.fileName);
 
         // create image for opencv
-        //opencv_core.IplImage image = opencv_core.IplImage.createFrom(detectedLines.bufferedImage);
-        opencv_core.IplImage image = cvLoadImage(this.fileRef.getAbsolutePath(), CV_LOAD_IMAGE_GRAYSCALE);
+        IplImage image = cvLoadImage(this.fileRef.getAbsolutePath(), CV_LOAD_IMAGE_GRAYSCALE);
         logger.debug("image opened for opencv");
 
         // Objects allocated with a create*() or clone() factory method are automatically released
         // by the garbage collector, but may still be explicitly released by calling release().
         // You shall NOT call cvReleaseImage(), cvReleaseMemStorage(), etc. on objects allocated this way.
-        opencv_core.CvMemStorage storage = opencv_core.CvMemStorage.create();
+        CvMemStorage storage = CvMemStorage.create();
         logger.debug("created opencv memory storage");
 
         if (image != null) {
@@ -409,17 +408,37 @@ public class PGM_Image implements Cloneable {
             //cvThreshold(image, image, threshold, 255, opencv_imgproc.CV_THRESH_BINARY);
             //logger.debug("image thresholded");
 
-            // To check if an output argument is null we may call either isNull() or equals(null).
-            opencv_core.CvSeq lines = new opencv_core.CvSeq(null);
+
+            CvSeq lines;
 
             logger.debug("detecting edges");
-            cvCanny(image, image, 50, 200, 3);
+            //if(use_canny) {
+                cvCanny(image, image, 50, 200, 3);
+            /*} else  {
+                // Let's find some contours! but first some thresholding...
+                cvThreshold(image, image, cv_threshold, 255, CV_THRESH_BINARY);
+
+                // To check if an output argument is null we may call either isNull() or equals(null).
+                CvSeq contour = new CvSeq(null);
+                cvFindContours(image, storage, contour, Loader.sizeof(CvContour.class),
+                        CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+                while (contour != null && !contour.isNull()) {
+                    if (contour.elem_size() > 0) {
+                        CvSeq points = cvApproxPoly(contour, Loader.sizeof(CvContour.class),
+                                storage, CV_POLY_APPROX_DP, cvContourPerimeter(contour)*0.02, 0);
+                        cvDrawContours(grabbedImage, points, CvScalar.BLUE, CvScalar.BLUE, -1, 1, CV_AA);
+                    }
+                    contour = contour.h_next();
+                }
+            }
+            */
+
 
             logger.debug("applying hough transformation");
             /*
             public static native CvSeq cvHoughLines2(CvArr image, Pointer line_storage, int method,
             double rho, double theta, int threshold, double param1/*=0*///, double param2/*=0*/);
-            lines = cvHoughLines2(image, storage, CV_HOUGH_STANDARD, 1, PI/180, threshold, 0, 0);
+            lines = cvHoughLines2(image, storage, method, 1, PI/180, hough_threshold, 0, 0);
 
             logger.debug("detecting and drawing lines");
             for (int i = 0; i < lines.total(); i++) {
