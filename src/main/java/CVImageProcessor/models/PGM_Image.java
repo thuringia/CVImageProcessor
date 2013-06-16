@@ -15,16 +15,16 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.googlecode.javacv.cpp.opencv_core.cvDrawContours;
+import static com.googlecode.javacv.cpp.opencv_core.*;
 import static com.googlecode.javacv.cpp.opencv_highgui.CV_LOAD_IMAGE_GRAYSCALE;
 import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImage;
 import static com.googlecode.javacv.cpp.opencv_imgproc.*;
+import static java.lang.Math.PI;
 
 /**
  * Created with IntelliJ IDEA.
@@ -368,6 +368,8 @@ public class PGM_Image implements Cloneable {
 
     /**
      * detect lines in this image
+     * based on the openCV Hough transform tutorial {@link http://docs.opencv.org/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html#hough-lines}
+     * using the JavaCV wrapper {@link https://code.google.com/p/javacv/}
      * @return new {@link PGM_Image} with detected lines drawn in
      */
     public PGM_Image detectLines(int threshold) {
@@ -404,24 +406,39 @@ public class PGM_Image implements Cloneable {
 
         if (image != null) {
             // threshold the image
-            cvThreshold(image, image, threshold, 255, opencv_imgproc.CV_THRESH_BINARY);
-            logger.debug("image thresholded");
+            //cvThreshold(image, image, threshold, 255, opencv_imgproc.CV_THRESH_BINARY);
+            //logger.debug("image thresholded");
 
             // To check if an output argument is null we may call either isNull() or equals(null).
-            opencv_core.CvSeq contour = new opencv_core.CvSeq(null);
+            opencv_core.CvSeq lines = new opencv_core.CvSeq(null);
 
-            logger.debug("detecting lines");
-            opencv_imgproc.cvFindContours(image, storage, contour, Loader.sizeof(opencv_core.CvContour.class),
-                   opencv_imgproc.CV_RETR_LIST, opencv_imgproc.CV_CHAIN_APPROX_SIMPLE);
+            logger.debug("detecting edges");
+            cvCanny(image, image, 50, 200, 3);
 
-            logger.debug("drawing lines");
-            while (contour != null && !contour.isNull()) {
-                if (contour.elem_size() > 0) {
-                    opencv_core.CvSeq points = opencv_imgproc.cvApproxPoly(contour, Loader.sizeof(opencv_core.CvContour.class),
-                            storage, opencv_imgproc.CV_POLY_APPROX_DP, cvContourPerimeter(contour) * 0.02, 0);
-                    cvDrawContours(image, points, opencv_core.CvScalar.BLUE, opencv_core.CvScalar.BLUE, -1, 1, opencv_core.CV_AA);
-                }
-                contour = contour.h_next();
+            logger.debug("applying hough transformation");
+            /*
+            public static native CvSeq cvHoughLines2(CvArr image, Pointer line_storage, int method,
+            double rho, double theta, int threshold, double param1/*=0*///, double param2/*=0*/);
+            lines = cvHoughLines2(image, storage, CV_HOUGH_STANDARD, 1, PI/180, threshold, 0, 0);
+
+            logger.debug("detecting and drawing lines");
+            for (int i = 0; i < lines.total(); i++) {
+                CvPoint2D32f point = new CvPoint2D32f(cvGetSeqElem(lines, i));
+
+                float rho=point.x();
+                float theta=point.y();
+
+                double a = Math.cos((double) theta), b = Math.sin((double) theta);
+                double x0 = a * rho, y0 = b * rho;
+                CvPoint pt1 = new CvPoint(
+                        (int) Math.round(x0 + 1000 * (-b)),
+                        (int) Math.round(y0 + 1000 * (a))),
+                        pt2 = new CvPoint(
+                                (int) Math.round(x0 - 1000 * (-b)),
+                                (int) Math.round(y0 - 1000 * (a)));
+
+                logger.debug("line detected with rho=" + rho + " and theta=" + theta);
+                cvLine(image, pt1, pt2, CV_RGB(255, 0, 0), 3, CV_AA, 0);
             }
         }
 
