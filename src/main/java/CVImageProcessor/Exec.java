@@ -42,6 +42,7 @@ public class Exec {
 
         frame = new JFrame("CVImageProcessor");
         frame.setContentPane(new MainWindow().mainPanel);
+        //noinspection MagicConstant
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);

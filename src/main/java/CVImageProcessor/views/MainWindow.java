@@ -91,7 +91,7 @@ public class MainWindow {
     /**
      * enum used to select and save the images
      */
-    private enum IMAGES {STANDARD, BLURRED, INVERTED, LINES};
+    private enum IMAGES {STANDARD, BLURRED, INVERTED, LINES}
 
     public MainWindow() {
         images = new HashMap<IMAGES, PGM_Image>();
@@ -263,7 +263,7 @@ public class MainWindow {
                 }
 
 
-                int file_to_save = JOptionPane.showOptionDialog(
+                @SuppressWarnings("MagicConstant") int file_to_save = JOptionPane.showOptionDialog(
                         Exec.getFrame(),
                         "Please choose the image to save.",
                         "Choose image",

@@ -2,8 +2,6 @@ package CVImageProcessor.models;
 
 import com.googlecode.charts4j.*;
 import com.googlecode.javacpp.Loader;
-import com.googlecode.javacv.cpp.opencv_core;
-import com.googlecode.javacv.cpp.opencv_imgproc;
 import com.googlecode.javacv.cpp.opencv_objdetect;
 import com.jhlabs.image.GaussianFilter;
 import org.apache.commons.imaging.ImageReadException;
@@ -35,20 +33,20 @@ import static java.lang.Math.PI;
  */
 public class PGM_Image implements Cloneable {
 
-    Logger logger = Logger.getLogger(PGM_Image.class);
+    private final Logger logger = Logger.getLogger(PGM_Image.class);
 
     public int width;
     public int height;
     public int depth;
-    public String comment = "";
+    private String comment = "";
     public String magicNumber;
 
     public String fileName;
-    public long fileSize;
+    private final long fileSize;
 
-    public int[][] data;
+    private int[][] data;
 
-    public File fileRef;
+    public final File fileRef;
 
     public BufferedImage bufferedImage;
 
@@ -186,7 +184,7 @@ public class PGM_Image implements Cloneable {
         if (floored) {
             data = Data.newData(scaleFloor(new ArrayList<Number>(histData.values())));
         } else {
-            data = Data.newData(scale(new ArrayList<Number>(histData.values()), 0.0, 100.0));
+            data = Data.newData(scale(new ArrayList<Number>(histData.values())));
         }
         //
         BarChartPlot plot = Plots.newBarChartPlot(data, black);
@@ -231,16 +229,16 @@ public class PGM_Image implements Cloneable {
     /**
      * Scales the data set
      *
-     * @param data a {@link List<? extends Number>} with the values to scale
-     * @param min  the lowest value
-     * @param max  the highest value
+     *
+     *
+     * @param data a {@link java.util.List<? extends Number>} with the values to scale
      * @return double[] with the scaled values
      */
-    private double[] scale(final List<? extends Number> data, final double min, final double max) {
+    private double[] scale(final List<? extends Number> data) {
         final double[] d = getDoubleArray(data);
         final double[] scaledData = new double[d.length];
         for (int j = 0; j < d.length; j++) {
-            scaledData[j] = ((d[j] - min) / (max - min));
+            scaledData[j] = ((d[j] - 0.0) / (100.0 - 0.0));
         }
         return scaledData;
     }
@@ -248,8 +246,8 @@ public class PGM_Image implements Cloneable {
     /**
      * Creates a double[] based on a List
      *
-     * @param data
-     * @return
+     * @param data the data for the array
+     * @return double[] with data
      */
     private double[] getDoubleArray(List<? extends Number> data) {
         final double[] d = new double[data.size()];
@@ -356,12 +354,12 @@ public class PGM_Image implements Cloneable {
 
     /**
      * Cycle through all the pixels to genereate the histogramm data
-     * @param blurred
+     * @param image the image whose histogram data needs updating
      */
-    private void updateHistogramData(PGM_Image blurred) {
+    private void updateHistogramData(PGM_Image image) {
         for (int row = 0; row < width; row++) {
             for (int col = 0; col < height; col++) {
-                blurred.data[row][col] = blurred.bufferedImage.getRGB(row, col) & 0xFF;
+                image.data[row][col] = image.bufferedImage.getRGB(row, col) & 0xFF;
             }
         }
     }
@@ -378,7 +376,7 @@ public class PGM_Image implements Cloneable {
 
         logger.debug("starting line detection");
 
-        PGM_Image detectedLines = null;
+        PGM_Image detectedLines;
 
         try {
             detectedLines = this.clone();
@@ -462,6 +460,7 @@ public class PGM_Image implements Cloneable {
         }
 
         // update BufferedImage
+        assert image != null;
         detectedLines.bufferedImage = image.getBufferedImage();
 
         // update histogram data
