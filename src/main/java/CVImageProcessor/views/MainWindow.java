@@ -6,6 +6,7 @@ import org.apache.commons.imaging.ImageFormat;
 import org.apache.commons.imaging.ImageWriteException;
 import org.apache.commons.imaging.Imaging;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -16,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -76,6 +78,8 @@ public class MainWindow {
     private ImageIcon detectedLinesHistFloored;
 
     private static String histogramError = "No histogram because of missing internet connection.";
+
+    private static Logger logger = Logger.getLogger(MainWindow.class);
 
     public MainWindow() {
         viewButtonsActionListener = new ActionListener() {
@@ -224,6 +228,7 @@ public class MainWindow {
                 dataPanel.setEnabledAt(2, true);
                 detectedLinesRadioButton.setEnabled(true);
                 detectedLinesRadioButton.setSelected(true);
+                thresholdSlider.setEnabled(true);
 
                 getDetectedLines(thresholdSlider.getValue());
             }
@@ -237,26 +242,70 @@ public class MainWindow {
         });
     }
 
-    private void getDetectedLines(int threshold) {
-        detectedLinesImage = image.detectLines(threshold);
-        detectedLinesHist = new ImageIcon(detectedLinesImage.getHistogram(false));
-        detectedLinesHistFloored = new ImageIcon(detectedLinesImage.getHistogram(true));
+    private void getDetectedLines(final int threshold) {
+        SwingWorker<PGM_Image, Void> worker = new SwingWorker<PGM_Image, Void>() {
+            @Override
+            protected PGM_Image doInBackground() throws Exception {
+                return image.detectLines(threshold);  //To change body of implemented methods use File | Settings | File Templates.
+            }
 
-        if (detectedLinesHist == null || detectedLinesHistFloored == null) histogramLabel.setText(histogramError);
+            @Override
+            protected void done() {
+                try {
+                    detectedLinesImage = get();
+                    detectedLinesHist = new ImageIcon(detectedLinesImage.getHistogram(false));
+                    detectedLinesHistFloored = new ImageIcon(detectedLinesImage.getHistogram(true));
 
-        showImage();
-        showHistogram();
+                    if (detectedLinesHist == null || detectedLinesHistFloored == null) histogramLabel.setText(histogramError);
+
+                    showImage();
+                    showHistogram();
+                } catch (Exception e) {
+                    logger.error("concurrency issue @ line detection worker:\n", e);
+                }
+            }
+        };
+
+        worker.execute();
     }
 
-    private void getBlurredImage(int radius) {
-        blurredImage = image.blur(Float.valueOf(radius));
-        blurredHist = new ImageIcon(blurredImage.getHistogram(false));
-        blurredHistFloored = new ImageIcon(blurredImage.getHistogram(true));
+    private void getBlurredImage(final int radius) {
+        SwingWorker<PGM_Image, Void> worker = new SwingWorker<PGM_Image, Void>() {
+            @Override
+            protected PGM_Image doInBackground() throws Exception {
+                return image.blur(radius);
+            }
 
-        if (blurredHist == null || blurredHistFloored == null) histogramLabel.setText(histogramError);
+            /**
+             * Executed on the <i>Event Dispatch Thread</i> after the {@code doInBackground}
+             * method is finished. The default
+             * implementation does nothing. Subclasses may override this method to
+             * perform completion actions on the <i>Event Dispatch Thread</i>. Note
+             * that you can query status inside the implementation of this method to
+             * determine the result of this task or whether this task has been cancelled.
+             *
+             * @see #doInBackground
+             * @see #isCancelled()
+             * @see #get
+             */
+            @Override
+            protected void done() {
+                try {
+                    blurredImage = get();
+                    blurredHist = new ImageIcon(blurredImage.getHistogram(false));
+                    blurredHistFloored = new ImageIcon(blurredImage.getHistogram(true));
 
-        showImage();
-        showHistogram();
+                    if (blurredHist == null || blurredHistFloored == null) histogramLabel.setText(histogramError);
+
+                    showImage();
+                    showHistogram();
+                } catch (Exception e) {
+                    logger.error("concurrency issue @ blur worker:\n", e);
+                }
+            }
+        };
+
+        worker.execute();
     }
 
     private void getHistograms() {
