@@ -12,11 +12,12 @@ For everything else please see the provided links or the source code.
 
 ## Features
 
-* read any PGM image
-* invert color
-* blur image
-* save modified images
-* display histograms
+* Read any PGM image
+* Invert color
+* Blur image
+* Detect lines using the Hough transformation
+* Save modified images
+* Display histograms
 
 ## Requirements
 
@@ -33,8 +34,8 @@ Installing packages from your package manager is highly recommended!
 1. Open a terminal
 	1. Clone the git repo with ```git clone https://github.com/thuringia/CVImageProcessor.git```
 	2. ```cd``` into the cloned directory
-	1. Install the project's dependencies with ```mvn install```
 	1. Create a runnable jar with ```mvn package```
+	    1. In case of errors, please run ```mvn install``` to download and install the project's depencies to your local Maven repository.
 	1. Create Javadoc with ```mvn javadoc:javadoc```
 	
 Usage instructions for Windows can be different (expecially for Maven) please consult the provided links for further assistance.
@@ -53,8 +54,12 @@ Usage instructions for Windows can be different (expecially for Maven) please co
 	* Invert your image by clicking 'Invert'
 	* Blur the image by clicking 'Blur' with adjustable kernel sizes using the slider
 	* Detect lines in the image by clicking the "Detect Lines" button
+	    * You can adjust the Hough Transformation's threshold using the slider
+	    * You can switch between standard and probalistic Hough using the radio buttons (probalistic yields better results)
 	* Switch between the original, inverted and blurred image by using the 'View' tab to the right
-* Save an inverted or blurred image by clicking the appropriate buttons in the 'File' tab at the bottom
+* Save modified images using the 'Save' button in the 'File' tab
+    1. Select the image to save from the dialog shown
+    1. Select where to save the image to using the dialog shown
 
 #Libraries
 * [Apache Commons IO](http://commons.apache.org/proper/commons-io/)
@@ -62,3 +67,5 @@ Usage instructions for Windows can be different (expecially for Maven) please co
 * [Apache log4j](http://logging.apache.org/log4j/1.2/)
 * [Chart4j](https://code.google.com/p/charts4j/)
 * [Jerry Huxtable's 'Blurring for Beginners'](http://www.jhlabs.com/ip/blurring.html)
+* [OpenCV](http://opencv.org)
+* [JavaCV](https://code.google.com/p/javacv/)
